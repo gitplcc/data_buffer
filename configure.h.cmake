@@ -1,0 +1,1 @@
+#cmakedefine HAS_STDATOMIC_H
