@@ -10,6 +10,9 @@ project(
 include(CheckSymbolExists)
 include(CheckIncludeFile)
 include(cmake/CPM.cmake)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    include(CTest)
+endif()
 
 CHECK_INCLUDE_FILE(stdatomic.h HAS_STDATOMIC_H)
 
@@ -26,7 +29,7 @@ CPMAddPackage(
   VERSION 2.6.1
   GITHUB_REPOSITORY ThrowTheSwitch/Unity
   OPTIONS
-    "UNITY_EXTENSION_FIXTURE OFF"
+    "UNITY_EXTENSION_FIXTURE ON"
     "UNITY_EXTENSION_MEMORY OFF"
 )
 

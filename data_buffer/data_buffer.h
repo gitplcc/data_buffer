@@ -23,10 +23,8 @@
  * A structure to represent a measurement set
  */
 struct DataRecord {
-  /*@{*/
   uint32_t timeStamp; /**< sample time stamp */
   float samples[6];   /**< sensor measurements */
-  /*@}*/
 };
 
 /** Bundle size in bytes */

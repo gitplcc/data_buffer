@@ -5,13 +5,13 @@
  *      Author: lcastedo
  */
 
-#include <assert.h>
 #include <data_buffer.h>
-#include <stdatomic.h>
+#include <assert.h>
 
 static struct DataRecord dbuf_storage[DBUF_BUFFER_LENGTH];
 static struct DataRecord *dbuf_wr_ptr = dbuf_storage;
 static struct DataRecord *dbuf_rd_ptr = dbuf_storage;
+bool dbuf_empty_flag = true;
 
 static const struct DataRecord *dbuf_storage_boundary =
     dbuf_storage + DBUF_BUFFER_LENGTH;
@@ -25,7 +25,6 @@ static const struct DataRecord *dbuf_storage_boundary =
  */
 bool dbuf_bundle_available(void) {
   return dbuf_record_count() >= DBUF_BUNDLE_LENGTH;
-  ;
 }
 
 /**
@@ -33,7 +32,10 @@ bool dbuf_bundle_available(void) {
  *
  * This function reset buffer and render it empty.
  */
-void dbuf_clear(void) { dbuf_wr_ptr = dbuf_rd_ptr = dbuf_storage; }
+void dbuf_clear(void) {
+  dbuf_wr_ptr = dbuf_rd_ptr = dbuf_storage;
+  dbuf_empty_flag = true;
+}
 
 /**
  * Get current read position.
@@ -42,7 +44,9 @@ void dbuf_clear(void) { dbuf_wr_ptr = dbuf_rd_ptr = dbuf_storage; }
  *
  * @return Non-writable pointer to current read slot.
  */
-const struct DataRecord *dbuf_current_rd_slot(void) { return dbuf_rd_ptr; }
+const struct DataRecord *dbuf_current_rd_slot(void) {
+  return dbuf_bundle_available() ? dbuf_rd_ptr : NULL;
+}
 
 /**
  * Get current write position.
@@ -52,7 +56,7 @@ const struct DataRecord *dbuf_current_rd_slot(void) { return dbuf_rd_ptr; }
  * @return Writeble pointer to current write slot.
  */
 struct DataRecord *dbuf_current_wr_slot(void) {
-  return dbuf_wr_ptr;
+  return (dbuf_wr_ptr != dbuf_rd_ptr) || dbuf_empty_flag ? dbuf_wr_ptr : NULL;
 }
 
 /**
@@ -68,6 +72,8 @@ const struct DataRecord *dbuf_pop_record_bundle(void) {
   dbuf_rd_ptr += DBUF_BUNDLE_LENGTH;
   if (dbuf_rd_ptr >= dbuf_storage_boundary)
     dbuf_rd_ptr = dbuf_storage;
+  if (dbuf_rd_ptr == dbuf_wr_ptr)
+    dbuf_empty_flag = true;
   return dbuf_rd_ptr;
 }
 
@@ -79,6 +85,7 @@ const struct DataRecord *dbuf_pop_record_bundle(void) {
 struct DataRecord *dbuf_push_record(void) {
   if (++dbuf_wr_ptr >= dbuf_storage_boundary)
     dbuf_wr_ptr = dbuf_storage;
+  dbuf_empty_flag = false;
   return dbuf_wr_ptr;
 }
 
@@ -88,6 +95,9 @@ struct DataRecord *dbuf_push_record(void) {
  * @return Number of records in buffer.
  */
 size_t dbuf_record_count(void) {
-  size_t rec_count = dbuf_wr_ptr - dbuf_rd_ptr;
-  return rec_count >= 0 ? rec_count : rec_count + DBUF_BUFFER_LENGTH;
+  if (dbuf_empty_flag)
+    return 0;
+
+  ptrdiff_t dif = dbuf_wr_ptr - dbuf_rd_ptr;
+  return (size_t)(dif > 0 ? dif : dif + DBUF_BUFFER_LENGTH);
 }

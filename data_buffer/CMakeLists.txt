@@ -27,30 +27,32 @@ target_link_libraries(
   $<$<PLATFORM_ID:Windows>:Ws2_32 Wlanapi>
 )
 
-add_executable(databuffer_test_runner)
-
-target_compile_features(databuffer_test_runner PUBLIC c_std_11)
-set_target_properties(databuffer_test_runner PROPERTIES C_EXTENSIONS OFF)
-#target_compile_definitions(rdatabuffer_test_runner r
-#  PRIVATE
-#    $<$<PLATFORM_ID:CYGWIN,Linux,MSYS>:_POSIX_C_SOURCE=200112L>
-#)
-target_sources(
-  databuffer_test_runner
-  PUBLIC
-    databuffer_test_runner.c
-)
-
-target_include_directories(
-  databuffer_test_runner
-  PRIVATE
-    "${DataBuffer_BINARY_DIR}"
-    "${DataBuffer_SOURCE_DIR}"
-)
-
-target_link_libraries(
-    databuffer_test_runner
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
+  add_executable(test_runner)
+  target_compile_features(test_runner PUBLIC c_std_11)
+  set_target_properties(test_runner PROPERTIES C_EXTENSIONS OFF)
+  #target_compile_definitions(rdatabuffer_test_runner r
+  #  PRIVATE
+  #    $<$<PLATFORM_ID:CYGWIN,Linux,MSYS>:_POSIX_C_SOURCE=200112L>
+  #)
+  target_sources(
+    test_runner
+    PUBLIC
+      test_runner.c
+      dbuf_empty_testcase.c
+      dbuf_full_testcase.c
+  )
+  target_include_directories(
+    test_runner
     PRIVATE
-	databuffer
-	unity::framework
-)
+      "${DataBuffer_BINARY_DIR}"
+      "${DataBuffer_SOURCE_DIR}"
+  )
+  target_link_libraries(
+      test_runner
+      PRIVATE
+        databuffer
+        unity::framework
+  )
+  add_test(NAME data_buffer_test COMMAND test_runner)
+endif()
