@@ -42,7 +42,8 @@ void dbuf_clear(void) {
  *
  * This function returns a pointer to current read slot in buffer.
  *
- * @return Non-writable pointer to current read slot.
+ * @return Non-writable pointer to current read slot if bundle
+ *         available, NULL otherwise.
  */
 const struct DataRecord *dbuf_current_rd_slot(void) {
   return dbuf_bundle_available() ? dbuf_rd_ptr : NULL;
@@ -53,7 +54,8 @@ const struct DataRecord *dbuf_current_rd_slot(void) {
  *
  * This function returns a pointer to current write slot in buffer.
 
- * @return Writeble pointer to current write slot.
+ * @return Writeable pointer to current write slot if space in buffer
+ *         available, NULL otherwise.
  */
 struct DataRecord *dbuf_current_wr_slot(void) {
   return (dbuf_wr_ptr != dbuf_rd_ptr) || dbuf_empty_flag ? dbuf_wr_ptr : NULL;
